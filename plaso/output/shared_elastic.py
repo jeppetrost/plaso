@@ -13,6 +13,8 @@ try:
 except ImportError:
   elasticsearch = None
 
+from datetime import datetime
+
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import interface
@@ -158,15 +160,17 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     # Add a string representation of the timestamp.
     try:
-      attribute_value = timelib.Timestamp.RoundToSeconds(event.timestamp)
+      attribute_value = timelib.Timestamp.CopyToDatetime(
+        event.timestamp,
+        timezone=self._output_mediator.timezone
+      )
     except TypeError as exception:
       logger.warning((
-          'Unable to round timestamp {0!s}. error: {1!s}. '
+          'Unable to extract timestamp {0!s}. error: {1!s}. '
           'Defaulting to 0').format(event.timestamp, exception))
-      attribute_value = 0
+      attribute_value = datetime.fromtimestamp(0)
 
-    attribute_value = timelib.Timestamp.CopyToIsoFormat(
-        attribute_value, timezone=self._output_mediator.timezone)
+    attribute_value = attribute_value.strftime("%Y-%m-%dT%H:%M:%S.%f")
     event_values['datetime'] = attribute_value
 
     message, _ = self._output_mediator.GetFormattedMessages(event)
