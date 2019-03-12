@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Imports for the Windows Registry parser."""
 
+from plaso.parsers.winreg_plugins import amcache
 from plaso.parsers.winreg_plugins import appcompatcache
 from plaso.parsers.winreg_plugins import bagmru
 from plaso.parsers.winreg_plugins import ccleaner
