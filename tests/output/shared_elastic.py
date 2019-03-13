@@ -123,7 +123,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
     expected_event_values = {
         'data_type': 'syslog:line',
-        'datetime': '2012-06-27T18:17:01+00:00',
+        'datetime': '2012-06-27T18:17:01.000000',
         'display_name': 'log/syslog.1',
         'filename': 'log/syslog.1',
         'hostname': 'ubuntu',
@@ -140,7 +140,9 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     }
 
     self.assertIsInstance(event_values, dict)
-    self.assertDictContainsSubset(expected_event_values, event_values)
+    event_values_subset = {k: v for k, v in event_values.items()
+                           if k in expected_event_values}
+    self.assertEqual(expected_event_values, event_values_subset)
 
   def testInsertEvent(self):
     """Tests the _InsertEvent function."""
