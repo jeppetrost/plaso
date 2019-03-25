@@ -163,10 +163,16 @@ class Amcache10Parser(interface.WindowsRegistryPlugin):
         event_data.fileversion = "{:s}".format(registry_value.GetDataAsObject())
 
       elif registry_value.name == "Language":
-        event_data.languagecode = int("{:d}".format(registry_value.GetDataAsObject()))
+        try:
+          event_data.languagecode = int("{:d}".format(registry_value.GetDataAsObject()))
+        except ValueError:
+          event_data.languagecode = int("{:s}".format(registry_value.GetDataAsObject()), 16)
 
       elif registry_value.name == "Size":
-        event_data.filesize = int("{:d}".format(registry_value.GetDataAsObject()))
+        try:
+          event_data.filesize = int("{:d}".format(registry_value.GetDataAsObject()))
+        except ValueError:
+          event_data.filesize = int("{:s}".format(registry_value.GetDataAsObject()), 16)
 
       elif registry_value.name == "ProgramId":
         event_data.programid = "{:s}".format(registry_value.GetDataAsObject())
@@ -215,7 +221,10 @@ class Amcache10Parser(interface.WindowsRegistryPlugin):
         event_data.publisher = '{:s}'.format(registry_value.GetDataAsObject())
 
       elif registry_value.name == 'Language':
-        event_data.languagecode = int('{:d}'.format(registry_value.GetDataAsObject()))
+        try:
+          event_data.languagecode = int('{:d}'.format(registry_value.GetDataAsObject()))
+        except ValueError:
+          event_data.languagecode = '{:s}'.format(registry_value.GetDataAsObject())
 
       elif registry_value.name == 'Type':
         event_data.entrytype = '{:s}'.format(registry_value.GetDataAsObject())
@@ -251,7 +260,7 @@ class Amcache10Parser(interface.WindowsRegistryPlugin):
       parser_mediator.ProduceEventWithEventData(install_event, event_data)
 
 
-class Amcache8Parser(interface.FileObjectParser):
+class Amcache8Parser(interface.WindowsRegistryPlugin):
   """Amcache Registry plugin for recently run programs."""
 
   NAME = 'amcache'
@@ -339,7 +348,7 @@ class Amcache8Parser(interface.FileObjectParser):
         event_data.version = '{:s}'.format(registry_value.GetDataAsObject())
 
       elif registry_value.name == self._AMCACHE_P_PUBLISHER:
-        event_data.publisher = '{:s}'.format(registry_value.GetDataAsObject)
+        event_data.publisher = '{:s}'.format(registry_value.GetDataAsObject())
 
       elif registry_value.name == self._AMCACHE_P_LANGUAGECODE:
         event_data.languagecode = '{:s}'.format(registry_value.GetDataAsObject())
@@ -348,10 +357,12 @@ class Amcache8Parser(interface.FileObjectParser):
         event_data.entrytype = '{:s}'.format(registry_value.GetDataAsObject())
 
       elif registry_value.name == self._AMCACHE_P_UNINSTALLKEY:
-        event_data.uninstallkey = '{:s}'.format(registry_value.GetDataAsObject())
+        event_uninstallkey = registry_value.GetDataAsObject()
+        if event_uninstallkey is not None:
+          event_data.uninstallkey = '{:s}'.format('\n'.join(event_uninstallkey))
 
       elif registry_value.name == self._AMCACHE_P_FILEPATHS:
-        event_data.filepaths = '{:s}'.format(registry_value.GetDataAsObject())
+        event_data.filepaths = '{:s}'.format('\n'.join(registry_value.GetDataAsObject()))
 
       elif registry_value.name == self._AMCACHE_P_PRODUCTCODE:
         event_data.productcode = '{:s}'.format(registry_value.GetDataAsObject())
@@ -360,13 +371,15 @@ class Amcache8Parser(interface.FileObjectParser):
         event_data.packagecode = '{:s}'.format(registry_value.GetDataAsObject())
 
       elif registry_value.name == self._AMCACHE_P_MSIPRODUCTCODE:
-        event_data.msiproductcode = '{:s}'.format(registry_value.GetDataAsObject())
+        event_data.msiproductcode = '\n'.join(registry_value.GetDataAsObject())
 
       elif registry_value.name == self._AMCACHE_P_MSIPACKAGECODE:
-        event_data.msipackagecode = '{:s}'.format(registry_value.GetDataAsObject())
+        event_data.msipackagecode = '\n'.join(registry_value.GetDataAsObject())
 
       elif registry_value.name == self._AMCACHE_P_FILES:
-        event_data.files = '{:s}'.format(registry_value.GetDataAsObject())
+        event_files = registry_value.GetDataAsObject()
+        if event_files is not None:
+          event_data.files = '{:s}'.format('\n'.join(event_files))
 
     event = time_events.DateTimeValuesEvent(
       posix_time.PosixTime(amcache_datetime),
@@ -385,8 +398,7 @@ class Amcache8Parser(interface.FileObjectParser):
     event_data = AmcacheEventData()
     for registry_value in registry_key.GetValues():
       if registry_value.name == self._AMCACHE_DATETIME:
-        amcache_datetime = am_entry.get_value_by_name(
-          self._AMCACHE_DATETIME).get_data_as_integer()
+        amcache_datetime = int('{:d}'.format(registry_value.GetDataAsObject()))
 
       elif registry_value.name == self._AMCACHE_FULL_PATH:
         event_data.full_path = '{:s}'.format(registry_value.GetDataAsObject())
